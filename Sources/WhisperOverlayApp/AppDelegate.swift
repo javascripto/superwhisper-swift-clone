@@ -97,6 +97,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             statusItemController?.setRecording(true)
             appState.overlayMode = .recording
             appState.message = "Recording..."
+            appState.lastTranscript = ""
             appState.recordingElapsed = 0
             appState.recordingLevel = 0
             startRecordingTimer()
