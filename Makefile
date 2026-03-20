@@ -9,6 +9,7 @@ APP_FRAMEWORKS := $(APP_BUNDLE)/Contents/Frameworks
 APP_EXPORT_CERT := dist/WhisperOverlay-LocalRootCA.cer
 APP_DMG_STAGE := dist/WhisperOverlay-dmg
 APP_EXPORT_DMG := dist/WhisperOverlay.dmg
+APP_RELEASE_DMG := dist/WhisperOverlay-release.dmg
 SWIFT := swift
 WHISPER_DIR := whisper.cpp
 WHISPER_CLI := $(WHISPER_DIR)/build/bin/whisper-cli
@@ -23,7 +24,7 @@ SIGN_IDENTITY ?= WhisperOverlay Local Root CA
 ROOT_CERT_NAME ?= WhisperOverlay Local Root CA
 CODESIGN := codesign
 
-.PHONY: build build-release run test clean whisper-prepare whisper-cli model icon bundle open sign export-cert package-transfer
+.PHONY: build build-release run test clean whisper-prepare whisper-cli model icon bundle open sign export-cert package-release package-transfer
 
 build:
 	$(SWIFT) build
@@ -88,6 +89,14 @@ bundle: $(APP_ICON) build-release
 	@if [ -d "Resources/Assets.xcassets" ]; then cp -R Resources/Assets.xcassets $(APP_BUNDLE)/Contents/Resources/; fi
 	$(MAKE) sign APP_BUNDLE="$(APP_BUNDLE)" APP_EXECUTABLE="$(APP_EXECUTABLE)"
 	@echo "Bundled $(APP_BUNDLE)"
+
+package-release: bundle
+	@rm -rf $(APP_DMG_STAGE) $(APP_RELEASE_DMG)
+	@mkdir -p $(APP_DMG_STAGE)
+	cp -R $(APP_BUNDLE) $(APP_DMG_STAGE)/
+	ln -s /Applications $(APP_DMG_STAGE)/Applications
+	hdiutil create -volname "WhisperOverlay" -srcfolder $(APP_DMG_STAGE) -ov -format UDZO $(APP_RELEASE_DMG)
+	@echo "Packaged $(APP_RELEASE_DMG)"
 
 package-transfer: bundle export-cert
 	@rm -rf $(APP_DMG_STAGE) $(APP_EXPORT_DMG)

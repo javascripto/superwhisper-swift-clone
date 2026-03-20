@@ -1,0 +1,40 @@
+name: Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    runs-on: macos-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install build tools
+        run: |
+          if ! command -v cmake >/dev/null 2>&1; then
+            brew install cmake
+          fi
+
+      - name: Build release DMG
+        run: make package-release SIGN_IDENTITY=-
+
+      - name: Upload DMG artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: WhisperOverlay-dmg
+          path: dist/WhisperOverlay-release.dmg
+          if-no-files-found: error
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/WhisperOverlay-release.dmg
+          generate_release_notes: true

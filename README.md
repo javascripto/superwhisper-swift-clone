@@ -66,6 +66,16 @@ On the other Mac:
 4. Launch `WhisperOverlay.app` from the mounted DMG or copy it to `/Applications`.
 5. If macOS still shows a permission prompt, re-enable Accessibility and Automation for that app once.
 
+## Release DMG
+
+For a DMG without the local certificate, use:
+
+```bash
+make package-release SIGN_IDENTITY=-
+```
+
+That creates `dist/WhisperOverlay-release.dmg`, which is the better artifact for GitHub Releases and CI.
+
 ## Whisper.cpp setup
 
 The app expects:
