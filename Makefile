@@ -45,22 +45,13 @@ model:
 	bash $(WHISPER_DIR)/models/download-ggml-model.sh $(MODEL)
 
 whisper-prepare:
-	@if [ ! -d "$(WHISPER_DIR)/.git" ] && [ ! -f "$(WHISPER_CLI)" ]; then \
-		if [ -f .gitmodules ] && grep -q 'path = $(WHISPER_DIR)' .gitmodules; then \
-			echo "Initializing whisper.cpp submodule..."; \
-			git submodule update --init --recursive -- $(WHISPER_DIR); \
-		else \
-			echo "whisper.cpp is missing. Clone it with:"; \
-			echo "  git clone $(WHISPER_GIT_URL) $(WHISPER_DIR)"; \
-			false; \
-		fi; \
+	@if [ ! -d "$(WHISPER_DIR)" ]; then \
+		echo "Cloning whisper.cpp..."; \
+		git clone --recursive $(WHISPER_GIT_URL) $(WHISPER_DIR); \
 	fi
 	@if [ ! -d "$(WHISPER_DIR)" ]; then \
 		echo "whisper.cpp directory is missing."; \
 		false; \
-	fi
-	@if [ ! -d "$(WHISPER_DIR)/.git" ] && [ ! -f .gitmodules ]; then \
-		echo "whisper.cpp is present but not a submodule. If you want this repo to manage it, add it as a git submodule."; \
 	fi
 
 $(APP_ICON): Scripts/generate_app_icon.py
@@ -75,8 +66,8 @@ export-cert:
 
 bundle: $(APP_ICON) build-release
 	@$(MAKE) whisper-prepare
+	@if [ ! -x "$(WHISPER_CLI)" ]; then $(MAKE) whisper-cli; fi
 	@if [ ! -f "$(MODEL_SOURCE)" ]; then $(MAKE) model MODEL=$(MODEL); fi
-	@test -x $(WHISPER_CLI) || (echo "Missing $(WHISPER_CLI). Build whisper.cpp first with 'make whisper-cli' on a machine with cmake installed." && false)
 	rm -rf $(APP_BUNDLE)
 	mkdir -p $(APP_BUNDLE)/Contents/MacOS
 	mkdir -p $(APP_BUNDLE)/Contents/Resources

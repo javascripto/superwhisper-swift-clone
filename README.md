@@ -87,13 +87,7 @@ make model MODEL=base
 
 You can also use `tiny`, `small`, `medium`, or `large-v3` depending on what you want to test.
 
-If you convert `whisper.cpp` into a git submodule, the main repository will only store a pointer to a fixed commit. A fresh clone will need the submodule initialized once, either with:
-
-```bash
-git submodule update --init --recursive
-```
-
-or simply by running `make bundle`, which now bootstraps `whisper.cpp` automatically when it is managed as a submodule.
+If `whisper.cpp` is missing in a fresh clone, `make bundle` will clone it automatically and then build it before packaging.
 
 ## Permissions
 
