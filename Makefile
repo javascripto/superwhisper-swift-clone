@@ -23,8 +23,10 @@ MODEL_SOURCE := $(WHISPER_DIR)/models/$(MODEL_FILE_NAME)
 SIGN_IDENTITY ?= WhisperOverlay Local Root CA
 ROOT_CERT_NAME ?= WhisperOverlay Local Root CA
 CODESIGN := codesign
+NOTARYTOOL := xcrun notarytool
+STAPLER := xcrun stapler
 
-.PHONY: build build-release run test clean whisper-prepare whisper-cli model icon bundle open sign export-cert package-release package-transfer
+.PHONY: build build-release run test clean whisper-prepare whisper-cli model icon bundle open sign export-cert package-release package-release-notarized notarize-release package-transfer
 
 build:
 	$(SWIFT) build
@@ -98,6 +100,8 @@ package-release: bundle
 	hdiutil create -volname "WhisperOverlay" -srcfolder $(APP_DMG_STAGE) -ov -format UDZO $(APP_RELEASE_DMG)
 	@echo "Packaged $(APP_RELEASE_DMG)"
 
+package-release-notarized: package-release notarize-release
+
 package-transfer: bundle export-cert
 	@rm -rf $(APP_DMG_STAGE) $(APP_EXPORT_DMG)
 	@mkdir -p $(APP_DMG_STAGE)
@@ -108,11 +112,21 @@ package-transfer: bundle export-cert
 	@echo "Packaged $(APP_EXPORT_DMG)"
 
 sign:
-	$(CODESIGN) --force --sign "$(SIGN_IDENTITY)" "$(APP_EXECUTABLE)"
+	$(CODESIGN) --force --options runtime --sign "$(SIGN_IDENTITY)" "$(APP_EXECUTABLE)"
 	@for dylib in $(APP_FRAMEWORKS)/*.dylib; do [ -e "$$dylib" ] || continue; $(CODESIGN) --force --sign "$(SIGN_IDENTITY)" "$$dylib"; done
-	$(CODESIGN) --force --sign "$(SIGN_IDENTITY)" "$(APP_BUNDLE)/Contents/MacOS/whisper-cli"
-	$(CODESIGN) --force --deep --sign "$(SIGN_IDENTITY)" "$(APP_BUNDLE)"
+	$(CODESIGN) --force --options runtime --sign "$(SIGN_IDENTITY)" "$(APP_BUNDLE)/Contents/MacOS/whisper-cli"
+	$(CODESIGN) --force --deep --options runtime --sign "$(SIGN_IDENTITY)" "$(APP_BUNDLE)"
 	$(CODESIGN) --verify --deep --strict --verbose=2 "$(APP_BUNDLE)"
+
+notarize-release:
+	@if [ -z "$$APPLE_ID" ] || [ -z "$$APPLE_TEAM_ID" ] || [ -z "$$APPLE_APP_PASSWORD" ]; then \
+		echo "Missing Apple notarization credentials."; \
+		echo "Set APPLE_ID, APPLE_TEAM_ID and APPLE_APP_PASSWORD."; \
+		false; \
+	fi
+	$(NOTARYTOOL) submit "$(APP_RELEASE_DMG)" --apple-id "$$APPLE_ID" --team-id "$$APPLE_TEAM_ID" --password "$$APPLE_APP_PASSWORD" --wait
+	$(STAPLER) staple "$(APP_RELEASE_DMG)"
+	$(STAPLER) validate "$(APP_RELEASE_DMG)"
 
 open: bundle
 	open $(APP_BUNDLE)

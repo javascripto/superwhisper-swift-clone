@@ -68,13 +68,23 @@ On the other Mac:
 
 ## Release DMG
 
-For a DMG without the local certificate, use:
+For a DMG intended for GitHub Releases, use:
 
 ```bash
-make package-release SIGN_IDENTITY=-
+make package-release-notarized SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)"
 ```
 
-That creates `dist/WhisperOverlay-release.dmg`, which is the better artifact for GitHub Releases and CI.
+That creates `dist/WhisperOverlay-release.dmg` and notarizes/staples it so Gatekeeper does not show the "Apple could not verify" warning.
+
+The notarized release workflow expects these GitHub Secrets:
+
+- `DEVELOPER_ID_P12_BASE64`
+- `DEVELOPER_ID_P12_PASSWORD`
+- `APPLE_ID`
+- `APPLE_TEAM_ID`
+- `APPLE_APP_PASSWORD`
+
+Apple documents that Mac software distributed outside the Mac App Store should be signed with a Developer ID certificate, and that DMGs can be uploaded to `notarytool` and stapled afterward.
 
 ## Whisper.cpp setup
 
