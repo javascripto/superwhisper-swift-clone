@@ -34,10 +34,12 @@ whisper-cli:
 model:
 	bash $(WHISPER_DIR)/models/download-ggml-model.sh $(MODEL)
 
-icon:
+$(APP_ICON): Scripts/generate_app_icon.py
 	python3 Scripts/generate_app_icon.py
 
-bundle: icon build-release
+icon: $(APP_ICON)
+
+bundle: $(APP_ICON) build-release
 	@if [ ! -f "$(MODEL_SOURCE)" ]; then $(MAKE) model MODEL=$(MODEL); fi
 	@test -x $(WHISPER_CLI) || (echo "Missing $(WHISPER_CLI). Build whisper.cpp first with 'make whisper-cli' on a machine with cmake installed." && false)
 	rm -rf $(APP_BUNDLE)

@@ -7,15 +7,17 @@ final class OverlayWindowController {
 
     init(appState: AppState) {
         self.appState = appState
-        let rootView = OverlayView(appState: appState)
-        let hostingView = NSHostingView(rootView: rootView)
-
         panel = PersistentOverlayPanel(
             contentRect: NSRect(x: 0, y: 0, width: 420, height: 160),
             styleMask: [.nonactivatingPanel, .borderless],
             backing: .buffered,
             defer: false
         )
+        let rootView = OverlayView(appState: appState) { [weak panel] in
+            panel?.orderOut(nil)
+        }
+        let hostingView = NSHostingView(rootView: rootView)
+
         panel.contentView = hostingView
         hostingView.wantsLayer = true
         hostingView.layer?.backgroundColor = NSColor.clear.cgColor
@@ -41,50 +43,71 @@ final class OverlayWindowController {
             NSApp.activate(ignoringOtherApps: true)
         }
     }
+
+    func hide() {
+        panel.orderOut(nil)
+    }
 }
 
 struct OverlayView: View {
     @ObservedObject var appState: AppState
+    let onClose: () -> Void
     @State private var pulse = false
 
     var body: some View {
         let colors = colorsForMode(appState.overlayMode)
 
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(spacing: 12) {
-                ZStack {
-                    Circle()
-                        .fill(colors.opacity(0.18))
-                        .frame(width: 54, height: 54)
-                        .scaleEffect(pulse ? 1.05 : 0.88)
-                    Circle()
-                        .strokeBorder(colors.opacity(0.45), lineWidth: 1.5)
-                        .frame(width: 54, height: 54)
-                    Circle()
-                        .fill(colors)
-                        .frame(width: 18, height: 18)
+        ZStack(alignment: .topTrailing) {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(spacing: 12) {
+                    ZStack {
+                        Circle()
+                            .fill(colors.opacity(0.18))
+                            .frame(width: 54, height: 54)
+                            .scaleEffect(pulse ? 1.05 : 0.88)
+                        Circle()
+                            .strokeBorder(colors.opacity(0.45), lineWidth: 1.5)
+                            .frame(width: 54, height: 54)
+                        Circle()
+                            .fill(colors)
+                            .frame(width: 18, height: 18)
+                    }
+
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(title)
+                            .font(.system(size: 20, weight: .semibold, design: .rounded))
+                            .foregroundStyle(.white)
+                        Text(appState.message)
+                            .font(.system(size: 13, weight: .medium, design: .rounded))
+                            .foregroundStyle(.white.opacity(0.76))
+                            .lineLimit(2)
+                    }
+
+                    Spacer(minLength: 0)
                 }
 
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(title)
-                        .font(.system(size: 20, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.white)
-                    Text(appState.message)
-                        .font(.system(size: 13, weight: .medium, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.76))
-                        .lineLimit(2)
+                if !appState.lastTranscript.isEmpty {
+                    Text(appState.lastTranscript)
+                        .font(.system(size: 12.5, weight: .regular, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.88))
+                        .lineLimit(3)
+                        .padding(.top, 2)
                 }
-
-                Spacer(minLength: 0)
             }
 
-            if !appState.lastTranscript.isEmpty {
-                Text(appState.lastTranscript)
-                    .font(.system(size: 12.5, weight: .regular, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.88))
-                    .lineLimit(3)
-                    .padding(.top, 2)
+            Button(action: onClose) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(.white.opacity(0.82))
+                    .frame(width: 24, height: 24)
+                    .background(Color.white.opacity(0.08))
+                    .clipShape(Circle())
             }
+            .buttonStyle(.plain)
+            .padding(.top, 4)
+            .padding(.trailing, 4)
+            .accessibilityLabel("Hide window")
+            .help("Hide window")
         }
         .padding(20)
         .frame(width: 420, height: 160, alignment: .topLeading)

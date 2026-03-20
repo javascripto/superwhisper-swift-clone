@@ -23,6 +23,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             onShowWindow: { [weak self] in
                 self?.windowController?.show()
             },
+            onHideWindow: { [weak self] in
+                self?.windowController?.hide()
+            },
             onOpenSettings: { [weak self] in
                 self?.settingsWindowController?.showWindow()
             },
@@ -43,7 +46,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         self.hotKeyController = hotKeyController
         hotKeyController.start()
 
-        windowController.show()
+        windowController.hide()
         appState.message = "Ready. Hold Right Command to record."
     }
 

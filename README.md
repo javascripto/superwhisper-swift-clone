@@ -7,6 +7,8 @@ MacOS app scaffold inspired by Superwhisper, built with Swift and `whisper.cpp`.
 - Terminal-first build with `make`
 - SwiftPM app target
 - Floating translucent overlay window
+- Starts hidden and appears while recording
+- Can be shown or hidden again from the menu bar
 - Global hotkey to toggle recording
 - Local audio capture to WAV
 - Transcription through `whisper.cpp` CLI
