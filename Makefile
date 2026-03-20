@@ -13,8 +13,10 @@ MODEL ?= base
 LANGUAGE ?= pt
 MODEL_FILE_NAME := ggml-$(MODEL).bin
 MODEL_SOURCE := $(WHISPER_DIR)/models/$(MODEL_FILE_NAME)
+SIGN_IDENTITY ?= WhisperOverlay Local Root CA
+CODESIGN := codesign
 
-.PHONY: build build-release run test clean whisper-cli model icon bundle open
+.PHONY: build build-release run test clean whisper-cli model icon bundle open sign
 
 build:
 	$(SWIFT) build
@@ -53,7 +55,14 @@ bundle: $(APP_ICON) build-release
 	sed -e 's|__MODEL_FILE_NAME__|$(MODEL_FILE_NAME)|g' -e 's|__LANGUAGE__|$(LANGUAGE)|g' $(APP_CONFIG_TEMPLATE) > $(APP_CONFIG_OUTPUT)
 	cp $(MODEL_SOURCE) $(APP_BUNDLE)/Contents/Resources/$(MODEL_FILE_NAME)
 	@if [ -d "Resources/Assets.xcassets" ]; then cp -R Resources/Assets.xcassets $(APP_BUNDLE)/Contents/Resources/; fi
+	$(MAKE) sign APP_BUNDLE="$(APP_BUNDLE)" APP_EXECUTABLE="$(APP_EXECUTABLE)"
 	@echo "Bundled $(APP_BUNDLE)"
+
+sign:
+	$(CODESIGN) --force --sign "$(SIGN_IDENTITY)" "$(APP_EXECUTABLE)"
+	$(CODESIGN) --force --sign "$(SIGN_IDENTITY)" "$(APP_BUNDLE)/Contents/MacOS/whisper-cli"
+	$(CODESIGN) --force --deep --sign "$(SIGN_IDENTITY)" "$(APP_BUNDLE)"
+	$(CODESIGN) --verify --deep --strict --verbose=2 "$(APP_BUNDLE)"
 
 open: bundle
 	open $(APP_BUNDLE)

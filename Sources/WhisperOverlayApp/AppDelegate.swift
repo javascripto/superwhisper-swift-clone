@@ -84,6 +84,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 return
             }
 
+            appState.recordingTargetProcessIdentifier = NSWorkspace.shared.frontmostApplication?.processIdentifier
+            if let pid = appState.recordingTargetProcessIdentifier {
+                AppLogger.insertion.info("Captured frontmost target pid \(pid, privacy: .public)")
+            } else {
+                AppLogger.insertion.info("No frontmost target application captured")
+            }
+
             let url = try await appState.audioRecorder.startRecording()
             appState.currentRecordingURL = url
             appState.isRecording = true
@@ -144,12 +151,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             if !result.text.isEmpty {
                 if appState.preferences.autoInsertEnabled {
                     AppLogger.insertion.info("Inserting transcript via paste")
-                    await appState.textInsertionService.copyAndPaste(result.text)
+                    _ = await appState.textInsertionService.copyAndPaste(
+                        result.text,
+                        targetProcessIdentifier: appState.recordingTargetProcessIdentifier
+                    )
                 } else {
                     AppLogger.insertion.info("Auto insert disabled; copying transcript only")
                     appState.textInsertionService.copyToClipboard(result.text)
                 }
             }
+            appState.recordingTargetProcessIdentifier = nil
 
         } catch {
             appState.isRecording = false
@@ -158,6 +169,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             appState.overlayMode = .error
             appState.message = "Transcription failed: \(error.localizedDescription)"
             AppLogger.transcription.error("Transcription failed: \(error.localizedDescription, privacy: .public)")
+            appState.recordingTargetProcessIdentifier = nil
             windowController?.show()
         }
     }

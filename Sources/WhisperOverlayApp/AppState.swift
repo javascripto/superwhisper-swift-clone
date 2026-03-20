@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import AppKit
 
 enum OverlayMode: String {
     case idle
@@ -16,6 +17,7 @@ final class AppState: ObservableObject {
     @Published var currentRecordingURL: URL?
     @Published var recordingElapsed: TimeInterval = 0
     @Published var recordingLevel: Double = 0
+    @Published var recordingTargetProcessIdentifier: pid_t?
 
     let preferences = AppPreferences()
     let audioRecorder = AudioRecorderService()
