@@ -45,6 +45,27 @@ make bundle MODEL=small LANGUAGE=pt
 
 The bundle copies `whisper-cli` into the app and embeds the selected model in `Contents/Resources/`.
 
+## Transfer bundle to another Mac
+
+To create a DMG that includes the app and the local root certificate:
+
+```bash
+make package-transfer
+```
+
+That produces:
+
+- `dist/WhisperOverlay.dmg`
+- `dist/WhisperOverlay-LocalRootCA.cer`
+
+On the other Mac:
+
+1. Open the DMG.
+2. Open `WhisperOverlay-LocalRootCA.cer` and add it to Keychain Access.
+3. Set the certificate to always trust if macOS asks.
+4. Launch `WhisperOverlay.app` from the mounted DMG or copy it to `/Applications`.
+5. If macOS still shows a permission prompt, re-enable Accessibility and Automation for that app once.
+
 ## Whisper.cpp setup
 
 The app expects:
@@ -66,12 +87,21 @@ make model MODEL=base
 
 You can also use `tiny`, `small`, `medium`, or `large-v3` depending on what you want to test.
 
+If you convert `whisper.cpp` into a git submodule, the main repository will only store a pointer to a fixed commit. A fresh clone will need the submodule initialized once, either with:
+
+```bash
+git submodule update --init --recursive
+```
+
+or simply by running `make bundle`, which now bootstraps `whisper.cpp` automatically when it is managed as a submodule.
+
 ## Permissions
 
 The app will need:
 
 - Microphone permission
 - Accessibility permission for paste automation
+- Automation permission for `System Events`
 
 Temporary audio and transcript files are created under the system temp directory and are cleaned up automatically after transcription.
 
