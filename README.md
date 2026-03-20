@@ -86,6 +86,8 @@ The notarized release workflow expects these GitHub Secrets:
 
 Apple documents that Mac software distributed outside the Mac App Store should be signed with a Developer ID certificate, and that DMGs can be uploaded to `notarytool` and stapled afterward.
 
+If you do not have those secrets configured yet, the GitHub Actions workflow will fall back to a non-notarized release build so you can keep publishing releases right away.
+
 ## Whisper.cpp setup
 
 The app expects:
