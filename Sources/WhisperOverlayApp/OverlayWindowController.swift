@@ -93,6 +93,17 @@ struct OverlayView: View {
                         .lineLimit(3)
                         .padding(.top, 2)
                 }
+
+                if appState.isRecording {
+                    HStack(spacing: 10) {
+                        Text(formatElapsed(appState.recordingElapsed))
+                            .font(.system(size: 11.5, weight: .semibold, design: .monospaced))
+                            .foregroundStyle(.white.opacity(0.74))
+
+                        RecordingLevelMeter(level: appState.recordingLevel)
+                    }
+                    .padding(.top, 2)
+                }
             }
 
             Button(action: onClose) {
@@ -165,5 +176,50 @@ struct OverlayView: View {
         case .error:
             return Color(red: 1.00, green: 0.46, blue: 0.60)
         }
+    }
+
+    private func formatElapsed(_ elapsed: TimeInterval) -> String {
+        let total = max(0, Int(elapsed.rounded(.down)))
+        let minutes = total / 60
+        let seconds = total % 60
+        return String(format: "%02d:%02d", minutes, seconds)
+    }
+}
+
+struct RecordingLevelMeter: View {
+    let level: Double
+
+    var body: some View {
+        let clamped = max(0, min(1, level))
+
+        HStack(spacing: 3) {
+            ForEach(0..<10, id: \.self) { index in
+                RoundedRectangle(cornerRadius: 2, style: .continuous)
+                    .fill(barColor(for: index, level: clamped))
+                    .frame(width: 7, height: barHeight(for: index, level: clamped))
+            }
+        }
+        .frame(height: 22, alignment: .bottomLeading)
+        .accessibilityLabel("Recording level")
+    }
+
+    private func barColor(for index: Int, level: Double) -> Color {
+        let threshold = Double(index + 1) / 10.0
+        if level >= threshold {
+            return Color(red: 0.42, green: 0.96, blue: 0.68)
+        }
+        return Color.white.opacity(0.14)
+    }
+
+    private func barHeight(for index: Int, level: Double) -> CGFloat {
+        let base: CGFloat = 4
+        let maxHeight: CGFloat = 22
+        let threshold = Double(index + 1) / 10.0
+        guard level >= threshold else {
+            return base
+        }
+
+        let energy = CGFloat(level)
+        return max(base, min(maxHeight, base + (maxHeight - base) * energy))
     }
 }

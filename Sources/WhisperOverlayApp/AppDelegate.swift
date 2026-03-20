@@ -7,6 +7,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItemController: StatusItemController?
     private var hotKeyController: HotKeyController?
     private var settingsWindowController: SettingsWindowController?
+    private var recordingTimer: Timer?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         AppLogger.app.info("Application launched")
@@ -47,6 +48,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         hotKeyController.start()
 
         windowController.hide()
+        statusItemController.setRecording(false)
         appState.message = "Ready. Hold Right Command to record."
     }
 
@@ -85,8 +87,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             let url = try await appState.audioRecorder.startRecording()
             appState.currentRecordingURL = url
             appState.isRecording = true
+            statusItemController?.setRecording(true)
             appState.overlayMode = .recording
             appState.message = "Recording..."
+            appState.recordingElapsed = 0
+            appState.recordingLevel = 0
+            startRecordingTimer()
             AppLogger.audio.info("Recording started at \(url.path, privacy: .public)")
             if appState.preferences.soundsEnabled {
                 appState.soundService.playStartSound()
@@ -108,6 +114,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
             guard let recordedURL = await appState.audioRecorder.stopRecording() else {
                 appState.isRecording = false
+                statusItemController?.setRecording(false)
                 appState.overlayMode = .idle
                 appState.message = "Nothing recorded."
                 AppLogger.audio.warning("Stop requested but no recording was active")
@@ -124,6 +131,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 appState.soundService.playStopSound()
             }
             appState.isRecording = false
+            statusItemController?.setRecording(false)
+            stopRecordingTimer()
             AppLogger.transcription.info("Transcribing \(recordedURL.lastPathComponent, privacy: .public)")
             let result = try await appState.transcriptionService.transcribe(audioURL: recordedURL)
             appState.lastTranscript = result.text
@@ -144,10 +153,43 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         } catch {
             appState.isRecording = false
+            statusItemController?.setRecording(false)
+            stopRecordingTimer()
             appState.overlayMode = .error
             appState.message = "Transcription failed: \(error.localizedDescription)"
             AppLogger.transcription.error("Transcription failed: \(error.localizedDescription, privacy: .public)")
             windowController?.show()
         }
+    }
+
+    private func startRecordingTimer() {
+        stopRecordingTimer()
+        let startDate = Date()
+
+        recordingTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { [weak self] timer in
+            guard let self else {
+                timer.invalidate()
+                return
+            }
+
+            guard self.appState.isRecording else {
+                timer.invalidate()
+                return
+            }
+
+            self.appState.recordingElapsed = Date().timeIntervalSince(startDate)
+            self.appState.recordingLevel = self.appState.audioRecorder.currentMeterLevel()
+        }
+
+        if let recordingTimer {
+            RunLoop.main.add(recordingTimer, forMode: .common)
+        }
+    }
+
+    private func stopRecordingTimer() {
+        recordingTimer?.invalidate()
+        recordingTimer = nil
+        appState.recordingElapsed = 0
+        appState.recordingLevel = 0
     }
 }

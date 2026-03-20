@@ -14,6 +14,8 @@ final class AppState: ObservableObject {
     @Published var message = "Ready."
     @Published var lastTranscript = ""
     @Published var currentRecordingURL: URL?
+    @Published var recordingElapsed: TimeInterval = 0
+    @Published var recordingLevel: Double = 0
 
     let preferences = AppPreferences()
     let audioRecorder = AudioRecorderService()

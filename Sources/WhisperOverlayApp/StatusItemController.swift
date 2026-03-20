@@ -23,11 +23,16 @@ final class StatusItemController: NSObject {
         self.statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         super.init()
         configure()
+        setRecording(false)
     }
 
     private func configure() {
         guard let button = statusItem.button else { return }
-        button.title = "Whisper"
+        button.image = statusImage()
+        button.imagePosition = .imageOnly
+        button.title = ""
+        button.toolTip = "Whisper"
+        button.setAccessibilityLabel("Whisper")
 
         let menu = NSMenu()
         let hotkeyItem = NSMenuItem(title: "Hotkey: Right Command", action: nil, keyEquivalent: "")
@@ -42,6 +47,17 @@ final class StatusItemController: NSObject {
         menu.addItem(NSMenuItem(title: "Quit", action: #selector(handleQuit), keyEquivalent: "q"))
         menu.items.forEach { $0.target = self }
         statusItem.menu = menu
+    }
+
+    func setRecording(_ isRecording: Bool) {
+        statusItem.button?.image = statusImage()
+    }
+
+    private func statusImage() -> NSImage? {
+        let image = NSImage(systemSymbolName: "mic.fill", accessibilityDescription: "Whisper")?
+            .withSymbolConfiguration(.init(pointSize: 14, weight: .medium))
+        image?.isTemplate = true
+        return image
     }
 
     @objc private func handleToggleRecording() {

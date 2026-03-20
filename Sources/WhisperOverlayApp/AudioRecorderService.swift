@@ -48,6 +48,17 @@ final class AudioRecorderService {
         return recordingURL
     }
 
+    func currentMeterLevel() -> Double {
+        guard let recorder else {
+            return 0
+        }
+
+        recorder.updateMeters()
+        let power = recorder.averagePower(forChannel: 0)
+        let normalized = (power + 50) / 50
+        return max(0, min(1, Double(normalized)))
+    }
+
     func deleteRecording(at url: URL) {
         do {
             try FileManager.default.removeItem(at: url)
