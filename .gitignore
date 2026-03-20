@@ -1,0 +1,30 @@
+.DS_Store
+.build/
+.swiftpm/
+.vscode/
+.idea/
+
+dist/
+DerivedData/
+
+# Local whisper.cpp outputs
+whisper.cpp/build/
+whisper.cpp/models/ggml-*.bin
+whisper.cpp/models/*.bin
+whisper.cpp/models/*.gguf
+whisper.cpp/samples/
+
+# Temporary audio/transcript files
+audio/
+captions/
+output/
+transcripts/
+video/
+
+# macOS app packaging and signing artifacts
+*.app
+*.dSYM/
+*.ipa
+*.xcarchive
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
