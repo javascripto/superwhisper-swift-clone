@@ -24,6 +24,7 @@ final class AppState: ObservableObject {
     let transcriptionService: TranscriptionService
     let textInsertionService = TextInsertionService()
     let soundService = SoundService()
+    let mediaKeyService = MediaKeyService()
 
     init() {
         self.transcriptionService = WhisperCppCLITranscriptionService(configurationProvider: { [preferences] in

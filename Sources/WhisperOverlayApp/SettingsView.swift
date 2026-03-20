@@ -12,6 +12,7 @@ struct SettingsView: View {
                 Section("Behavior") {
                     Toggle("Insert automatically after transcription", isOn: $preferences.autoInsertEnabled)
                     Toggle("Play start/stop sounds", isOn: $preferences.soundsEnabled)
+                    Toggle("Pause media while recording", isOn: $preferences.pauseMediaDuringRecording)
                 }
 
                 Section("Transcription") {
@@ -31,6 +32,6 @@ struct SettingsView: View {
             }
         }
         .padding(24)
-        .frame(width: 520, height: 280)
+        .frame(width: 520, height: 320)
     }
 }

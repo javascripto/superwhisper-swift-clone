@@ -10,6 +10,10 @@ final class AppPreferences: ObservableObject {
         didSet { save() }
     }
 
+    @Published var pauseMediaDuringRecording: Bool {
+        didSet { save() }
+    }
+
     @Published var language: String {
         didSet { save() }
     }
@@ -23,6 +27,7 @@ final class AppPreferences: ObservableObject {
     private enum Key {
         static let autoInsertEnabled = "WhisperOverlay.autoInsertEnabled"
         static let soundsEnabled = "WhisperOverlay.soundsEnabled"
+        static let pauseMediaDuringRecording = "WhisperOverlay.pauseMediaDuringRecording"
         static let language = "WhisperOverlay.language"
         static let modelFileName = "WhisperOverlay.modelFileName"
     }
@@ -31,6 +36,7 @@ final class AppPreferences: ObservableObject {
         self.defaults = defaults
         self.autoInsertEnabled = defaults.object(forKey: Key.autoInsertEnabled) as? Bool ?? true
         self.soundsEnabled = defaults.object(forKey: Key.soundsEnabled) as? Bool ?? true
+        self.pauseMediaDuringRecording = defaults.object(forKey: Key.pauseMediaDuringRecording) as? Bool ?? false
         self.language = AppPreferences.normalized(
             defaults.string(forKey: Key.language),
             fallback: "pt"
@@ -44,6 +50,7 @@ final class AppPreferences: ObservableObject {
     private func save() {
         defaults.set(autoInsertEnabled, forKey: Key.autoInsertEnabled)
         defaults.set(soundsEnabled, forKey: Key.soundsEnabled)
+        defaults.set(pauseMediaDuringRecording, forKey: Key.pauseMediaDuringRecording)
         defaults.set(language, forKey: Key.language)
         defaults.set(modelFileName, forKey: Key.modelFileName)
     }

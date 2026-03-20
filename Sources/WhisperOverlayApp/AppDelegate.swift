@@ -100,6 +100,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             appState.lastTranscript = ""
             appState.recordingElapsed = 0
             appState.recordingLevel = 0
+            if appState.preferences.pauseMediaDuringRecording {
+                appState.mediaKeyService.pausePlaybackIfEnabled()
+            }
             startRecordingTimer()
             AppLogger.audio.info("Recording started at \(url.path, privacy: .public)")
             if appState.preferences.soundsEnabled {
@@ -137,6 +140,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
             if appState.preferences.soundsEnabled {
                 appState.soundService.playStopSound()
+            }
+            if appState.preferences.pauseMediaDuringRecording {
+                appState.mediaKeyService.resumePlaybackIfNeeded()
             }
             appState.isRecording = false
             statusItemController?.setRecording(false)
